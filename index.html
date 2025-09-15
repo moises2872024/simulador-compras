@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Simulador - Carrito interactivo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css" />
+    <script src="js/app.js" defer></script>
+</head>
+
+<body>
+    <header>
+        <h1><i class="fa-solid fa-cart-shopping"></i> Simulador de Carrito</h1>
+        <p class="subtitle">Gestiona productos y compras de manera intuitiva</p>
+    </header>
+
+    <main class="container">
+        <section id="productos-section">
+            <div class="search-filter-section">
+                <div class="search-box">
+                    <h3><i class="fa-solid fa-magnifying-glass"></i> Buscar Producto</h3>
+                    <div class="search-controls">
+                        <input type="text" id="buscar-nombre" placeholder="Nombre exacto del producto..." />
+                        <button id="btn-buscar" class="btn">Buscar</button>
+                    </div>
+                    <div id="buscar-msg" class="msg"></div>
+                </div>
+
+                <div class="filter-box">
+                    <h3><i class="fa-solid fa-wrench"></i> Filtro</h3>
+                    <div class="filter-controls">
+                        <input type="text" id="filtro-nombre" placeholder="Palabra clave" />
+                        <input type="number" id="filtro-precio" placeholder="Precio máximo" step="0.01" min="0" />
+                    </div>
+                    <div class="filter-buttons">
+                        <button id="btn-filtrar" class="btn">Aplicar filtros</button>
+                        <button id="btn-reset-filtro" class="btn secondary">Limpiar</button>
+                    </div>
+                    <div id="filtro-msg" class="msg"></div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2><i class="fa-solid fa-box"></i> Productos Disponibles</h2>
+                <div id="productos-list" class="grid"></div>
+            </div>
+        </section>
+
+        <section id="control-section">
+            <div class="form-section">
+                <h2><i class="fa-solid fa-plus" style="color:#4f46e5;"></i> Agregar Producto</h2>
+                <form id="producto-form">
+                    <div class="form-group">
+                        <label for="input-nombre">Nombre del producto</label>
+                        <input type="text" id="input-nombre" required placeholder="Ej: Auriculares Bluetooth" />
+                    </div>
+                    <div class="form-group">
+                        <label for="input-precio">Precio (USD)</label>
+                        <input type="number" id="input-precio" min="0.01" step="0.01" required placeholder="0.00" />
+                    </div>
+                    <div class="form-group">
+                        <label for="input-stock">Cantidad en stock</label>
+                        <input type="number" id="input-stock" min="0" step="1" value="5" required />
+                    </div>
+                    <button type="submit" class="btn" style="width: 100%;">Agregar producto</button>
+                    <div id="form-msg" class="msg"></div>
+                </form>
+            </div>
+
+            <div class="section">
+                <h2>🛍️ Mi Carrito</h2>
+                <div id="cart-msg" class="msg"></div>
+                <div id="carrito-list"></div>
+                
+                <div class="cart-summary">
+                    <div class="cart-summary-row">
+                        <span>Productos:</span>
+                        <span id="cart-count">0</span>
+                    </div>
+                    <div class="cart-summary-row">
+                        <span>Total:</span>
+                        <span>$<span id="cart-total">0.00</span></span>
+                    </div>
+                </div>
+
+                <div class="cart-actions">
+                    <button id="btn-clear-cart" class="btn danger">Vaciar</button>
+                    <button id="btn-save-local" class="btn success">Guardar</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+</body>
+
+</html>
