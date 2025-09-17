@@ -25,7 +25,6 @@ function saveToLocal(key, value) {
         localStorage.setItem(key, JSON.stringify(value));
         return true;
     } catch (error) {
-        console.error('Error al guardar en localStorage:', error);
         return false;
     }
 }
@@ -35,10 +34,66 @@ function readFromLocal(key, fallback) {
         const raw = localStorage.getItem(key);
         return raw ? JSON.parse(raw) : fallback;
     } catch (error) {
-        console.error('Error al leer de localStorage:', error);
         return fallback;
     }
 }
+
+// Sistema de modal
+const Modal = {
+    element: null,
+    titleEl: null,
+    messageEl: null,
+    confirmCallback: null,
+
+    init() {
+        this.element = document.getElementById('confirm-modal');
+        this.titleEl = document.getElementById('modal-title');
+        this.messageEl = document.getElementById('modal-message');
+        
+        // Eventos del modal
+        document.getElementById('modal-cancel').addEventListener('click', () => this.close());
+        document.getElementById('modal-confirm').addEventListener('click', () => this.confirm());
+        
+        // Cerrar con ESC o click fuera
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.isOpen()) {
+                this.close();
+            }
+        });
+
+        this.element.addEventListener('click', (e) => {
+            if (e.target === this.element) {
+                this.close();
+            }
+        });
+    },
+
+    show(title, message, callback) {
+        this.titleEl.textContent = title;
+        this.messageEl.textContent = message;
+        this.confirmCallback = callback;
+        
+        this.element.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    },
+
+    close() {
+        this.element.classList.remove('show');
+        document.body.style.overflow = '';
+        this.confirmCallback = null;
+    },
+
+    confirm() {
+        if (this.confirmCallback) {
+            this.confirmCallback();
+        }
+        this.close();
+    },
+
+    isOpen() {
+        return this.element.classList.contains('show');
+    }
+};
 
 // Validaciones
 function validarProducto(nombre, precio, stock) {
@@ -86,11 +141,12 @@ function init() {
         p.id && p.nombre && typeof p.precio === 'number' && typeof p.stock === 'number'
     );
 
+    // Inicializar modal
+    Modal.init();
+
     renderProductos();
     renderCarrito();
     bindUI();
-
-    console.log('✅ Simulador inicializado correctamente');
 }
 
 // Renderizado de productos
@@ -232,23 +288,24 @@ function vaciarCarrito() {
         return mostrarMsg('#cart-msg', 'El carrito ya está vacío', 'error');
     }
 
-    // Confirmar acción
-    if (!confirm('¿Estás seguro de que quieres vaciar el carrito?')) {
-        return;
-    }
+    Modal.show(
+        'Vaciar Carrito',
+        '¿Estás seguro de que quieres vaciar el carrito? Esta acción no se puede deshacer.',
+        () => {
+            state.carrito.forEach(item => {
+                const producto = state.productos.find(p => p.id === item.id);
+                if (producto) {
+                    producto.stock += item.cantidad;
+                }
+            });
 
-    state.carrito.forEach(item => {
-        const producto = state.productos.find(p => p.id === item.id);
-        if (producto) {
-            producto.stock += item.cantidad;
+            state.carrito = [];
+            persistState();
+            renderProductos();
+            renderCarrito();
+            mostrarMsg('#cart-msg', 'Carrito vaciado correctamente', 'success');
         }
-    });
-
-    state.carrito = [];
-    persistState();
-    renderProductos();
-    renderCarrito();
-    mostrarMsg('#cart-msg', 'Carrito vaciado correctamente', 'success');
+    );
 }
 
 function totalCarrito() {
@@ -347,11 +404,7 @@ function persistState() {
     const guardadoProductos = saveToLocal(LS_KEYS.PRODUCTOS, state.productos);
     const guardadoCarrito = saveToLocal(LS_KEYS.CARRITO, state.carrito);
 
-    if (!guardadoProductos || !guardadoCarrito) {
-        console.warn('⚠️ Error al guardar algunos datos en localStorage');
-        return false;
-    }
-    return true;
+    return guardadoProductos && guardadoCarrito;
 }
 
 // Funciones de búsqueda y filtrado
@@ -594,14 +647,12 @@ function bindUI() {
         }
 
         // Escape: limpiar filtros
-        if (e.code === 'Escape') {
+        if (e.code === 'Escape' && !Modal.isOpen()) {
             limpiarFiltros();
             document.getElementById('buscar-nombre').value = '';
             limpiarMensaje('#buscar-msg');
         }
     });
-
-    console.log('🎮 Event bindings configurados');
 }
 
 // Arranque de la aplicación
@@ -609,8 +660,8 @@ document.addEventListener('DOMContentLoaded', function () {
     try {
         init();
     } catch (error) {
-        console.error('❌ Error al inicializar:', error);
-        alert('Error al cargar la aplicación. Por favor, recarga la página.');
+        // Mostrar error en la interfaz en lugar de alert
+        mostrarMsg('#cart-msg', 'Error al cargar la aplicación. Por favor, recarga la página.', 'error');
     }
 });
 
@@ -618,6 +669,5 @@ document.addEventListener('DOMContentLoaded', function () {
 setInterval(() => {
     if (state.productos.length > 0 || state.carrito.length > 0) {
         persistState();
-        console.log('💾 Auto-guardado realizado');
     }
 }, 30000);
