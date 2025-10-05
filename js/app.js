@@ -1,12 +1,3 @@
-// Datos iniciales
-const productosIniciales = [
-    { id: 'p1', nombre: 'Auriculares Gamer RGB', precio: 29.99, stock: 10, categoria: 'audio' },
-    { id: 'p2', nombre: 'Mouse Óptico 1600 DPI', precio: 19.50, stock: 8, categoria: 'input' },
-    { id: 'p3', nombre: 'Teclado Mecánico RGB', precio: 59.00, stock: 5, categoria: 'input' },
-    { id: 'p4', nombre: 'Webcam HD 1080p', precio: 45.00, stock: 3, categoria: 'video' },
-    { id: 'p5', nombre: 'Monitor LED 24"', precio: 199.99, stock: 2, categoria: 'display' }
-];
-
 // Estado de la aplicación
 const state = {
     productos: [],
@@ -38,62 +29,28 @@ function readFromLocal(key, fallback) {
     }
 }
 
-// Sistema de modal
-const Modal = {
-    element: null,
-    titleEl: null,
-    messageEl: null,
-    confirmCallback: null,
-
-    init() {
-        this.element = document.getElementById('confirm-modal');
-        this.titleEl = document.getElementById('modal-title');
-        this.messageEl = document.getElementById('modal-message');
-        
-        // Eventos del modal
-        document.getElementById('modal-cancel').addEventListener('click', () => this.close());
-        document.getElementById('modal-confirm').addEventListener('click', () => this.confirm());
-        
-        // Cerrar con ESC o click fuera
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && this.isOpen()) {
-                this.close();
-            }
-        });
-
-        this.element.addEventListener('click', (e) => {
-            if (e.target === this.element) {
-                this.close();
-            }
-        });
-    },
-
-    show(title, message, callback) {
-        this.titleEl.textContent = title;
-        this.messageEl.textContent = message;
-        this.confirmCallback = callback;
-        
-        this.element.classList.add('show');
-        document.body.style.overflow = 'hidden';
-    },
-
-    close() {
-        this.element.classList.remove('show');
-        document.body.style.overflow = '';
-        this.confirmCallback = null;
-    },
-
-    confirm() {
-        if (this.confirmCallback) {
-            this.confirmCallback();
+// Cargar productos desde JSON
+async function cargarProductosIniciales() {
+    try {
+        const response = await fetch('productos.json');
+        if (!response.ok) {
+            throw new Error('No se pudo cargar el archivo productos.json');
         }
-        this.close();
-    },
-
-    isOpen() {
-        return this.element.classList.contains('show');
+        const productos = await response.json();
+        return productos;
+    } catch (error) {
+        console.error('Error al cargar productos:', error);
+        
+        Swal.fire({
+            icon: 'error',
+            title: 'Error al cargar productos',
+            text: 'No se pudieron cargar los productos iniciales. Se iniciará con productos vacíos.',
+            confirmButtonText: 'Aceptar'
+        });
+        
+        return [];
     }
-};
+}
 
 // Validaciones
 function validarProducto(nombre, precio, stock) {
@@ -126,9 +83,32 @@ function sanitizarTexto(texto) {
 }
 
 // Inicialización
-function init() {
-    // Cargar datos desde localStorage
-    state.productos = readFromLocal(LS_KEYS.PRODUCTOS, productosIniciales);
+async function init() {
+    // Mostrar loading mientras carga
+    Swal.fire({
+        title: 'Cargando productos...',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    // Intentar cargar desde localStorage primero
+    const productosGuardados = readFromLocal(LS_KEYS.PRODUCTOS, null);
+    
+    if (productosGuardados && productosGuardados.length > 0) {
+        state.productos = productosGuardados;
+    } else {
+        // Si no hay productos guardados, cargar desde JSON
+        state.productos = await cargarProductosIniciales();
+        // Guardar en localStorage
+        if (state.productos.length > 0) {
+            saveToLocal(LS_KEYS.PRODUCTOS, state.productos);
+        }
+    }
+
     state.carrito = readFromLocal(LS_KEYS.CARRITO, []);
 
     // Limpiar carrito de productos que ya no existen
@@ -141,8 +121,8 @@ function init() {
         p.id && p.nombre && typeof p.precio === 'number' && typeof p.stock === 'number'
     );
 
-    // Inicializar modal
-    Modal.init();
+    // Cerrar loading
+    Swal.close();
 
     renderProductos();
     renderCarrito();
@@ -212,17 +192,45 @@ function renderProductos(lista = null) {
 function agregarAlCarrito(productId, cantidad = 1) {
     const producto = state.productos.find(p => p.id === productId);
     if (!producto) {
-        return mostrarMsg('#cart-msg', 'Producto no encontrado', 'error');
+        Swal.fire({
+            icon: 'error',
+            title: 'Producto no encontrado',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true
+        });
+        return;
     }
 
     if (producto.stock < cantidad) {
-        return mostrarMsg('#cart-msg', 'Stock insuficiente', 'error');
+        Swal.fire({
+            icon: 'warning',
+            title: 'Stock insuficiente',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true
+        });
+        return;
     }
 
     const item = state.carrito.find(ci => ci.id === productId);
     if (item) {
         if (producto.stock < item.cantidad + cantidad) {
-            return mostrarMsg('#cart-msg', 'No hay suficiente stock para agregar más unidades', 'error');
+            Swal.fire({
+                icon: 'warning',
+                title: 'Stock insuficiente',
+                text: 'No hay suficiente stock para agregar más unidades',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+            return;
         }
         item.cantidad += cantidad;
     } else {
@@ -238,7 +246,16 @@ function agregarAlCarrito(productId, cantidad = 1) {
     persistState();
     renderProductos();
     renderCarrito();
-    mostrarMsg('#cart-msg', `${producto.nombre} agregado al carrito`, 'success');
+    
+    Swal.fire({
+        icon: 'success',
+        title: `${producto.nombre} agregado`,
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true
+    });
 }
 
 function cambiarCantidadCarrito(productId, nuevaCantidad) {
@@ -250,7 +267,16 @@ function cambiarCantidadCarrito(productId, nuevaCantidad) {
     const diferencia = nuevaCantidad - item.cantidad;
 
     if (diferencia > 0 && producto.stock < diferencia) {
-        return mostrarMsg('#cart-msg', 'Stock insuficiente', 'error');
+        Swal.fire({
+            icon: 'warning',
+            title: 'Stock insuficiente',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
+        });
+        return;
     }
 
     if (nuevaCantidad <= 0) {
@@ -280,18 +306,44 @@ function removerDelCarrito(productId) {
     persistState();
     renderProductos();
     renderCarrito();
-    mostrarMsg('#cart-msg', 'Producto removido del carrito', 'success');
+    
+    Swal.fire({
+        icon: 'info',
+        title: 'Producto removido',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true
+    });
 }
 
 function vaciarCarrito() {
     if (state.carrito.length === 0) {
-        return mostrarMsg('#cart-msg', 'El carrito ya está vacío', 'error');
+        Swal.fire({
+            icon: 'info',
+            title: 'El carrito ya está vacío',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
+        });
+        return;
     }
 
-    Modal.show(
-        'Vaciar Carrito',
-        '¿Estás seguro de que quieres vaciar el carrito? Esta acción no se puede deshacer.',
-        () => {
+    Swal.fire({
+        title: '¿Vaciar carrito?',
+        text: 'Se devolverán todos los productos al stock. Esta acción no se puede deshacer.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Sí, vaciar',
+        cancelButtonText: 'Cancelar',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
             state.carrito.forEach(item => {
                 const producto = state.productos.find(p => p.id === item.id);
                 if (producto) {
@@ -303,9 +355,19 @@ function vaciarCarrito() {
             persistState();
             renderProductos();
             renderCarrito();
-            mostrarMsg('#cart-msg', 'Carrito vaciado correctamente', 'success');
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Carrito vaciado',
+                text: 'Todos los productos han sido devueltos al stock',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
         }
-    );
+    });
 }
 
 function totalCarrito() {
@@ -399,6 +461,82 @@ function limpiarMensaje(selector) {
     }
 }
 
+// Resetear datos a los valores del JSON
+async function resetearDatos() {
+    Swal.fire({
+        title: '¿Quieres resetear todos los datos?',
+        html: `
+            <p>Esta acción:</p>
+            <ul style="text-align: left; padding-left: 20px;">
+                <li>Cargará los productos que se encuentren en el archivo JSON</li>
+                <li>Vaciará el carrito completamente</li>
+                <li>Eliminará todos los productos que agregaste</li>
+            </ul>
+            <p><strong>Esta acción no se puede deshacer.</strong></p>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Sí, resetear',
+        cancelButtonText: 'Cancelar',
+        reverseButtons: true
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            // Mostrar loading
+            Swal.fire({
+                title: 'Reseteando datos...',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Cargar productos desde JSON
+            const productosOriginales = await cargarProductosIniciales();
+            
+            if (productosOriginales.length > 0) {
+                // Resetear estado
+                state.productos = productosOriginales;
+                state.carrito = [];
+                state.filtrosActivos = false;
+
+                // Guardar en localStorage
+                saveToLocal(LS_KEYS.PRODUCTOS, state.productos);
+                saveToLocal(LS_KEYS.CARRITO, state.carrito);
+
+                // Limpiar filtros visuales
+                document.getElementById('filtro-nombre').value = '';
+                document.getElementById('filtro-precio').value = '';
+                document.getElementById('buscar-nombre').value = '';
+                limpiarMensaje('#buscar-msg');
+                limpiarMensaje('#filtro-msg');
+
+                // Re-renderizar
+                renderProductos();
+                renderCarrito();
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Datos reseteados',
+                    text: 'Se han reseteado los datos correctamente',
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudieron resetear los datos',
+                    confirmButtonText: 'Aceptar'
+                });
+            }
+        }
+    });
+}
+
 // Persistencia
 function persistState() {
     const guardadoProductos = saveToLocal(LS_KEYS.PRODUCTOS, state.productos);
@@ -410,7 +548,8 @@ function persistState() {
 // Funciones de búsqueda y filtrado
 function buscarProducto(nombre) {
     if (!nombre || nombre.trim().length === 0) {
-        return mostrarMsg('#buscar-msg', 'Debes escribir un nombre para buscar', 'error');
+        mostrarMsg('#buscar-msg', 'Debes escribir un nombre para buscar', 'error');
+        return;
     }
 
     const nombreBuscado = sanitizarTexto(nombre).toLowerCase();
@@ -419,15 +558,28 @@ function buscarProducto(nombre) {
     );
 
     if (encontrado) {
-        mostrarMsg('#buscar-msg',
-            `✅ Encontrado: ${encontrado.nombre} - ${encontrado.precio.toFixed(2)} (Stock: ${encontrado.stock})`,
-            'success'
-        );
+        Swal.fire({
+            icon: 'success',
+            title: 'Producto encontrado',
+            html: `
+                <div style="text-align: left; padding: 10px;">
+                    <p><strong>Nombre:</strong> ${encontrado.nombre}</p>
+                    <p><strong>Precio:</strong> $${encontrado.precio.toFixed(2)}</p>
+                    <p><strong>Stock:</strong> ${encontrado.stock} unidades</p>
+                </div>
+            `,
+            confirmButtonText: 'Aceptar'
+        });
 
         // Resaltar el producto encontrado
         resaltarProducto(encontrado.id);
     } else {
-        mostrarMsg('#buscar-msg', '❌ No se encontró el producto con ese nombre exacto', 'error');
+        Swal.fire({
+            icon: 'error',
+            title: 'No encontrado',
+            text: 'No se encontró el producto con ese nombre exacto',
+            confirmButtonText: 'Aceptar'
+        });
     }
 }
 
@@ -447,7 +599,7 @@ function filtrarProductos(nombre, precioMax) {
     // Filtrar por precio máximo
     if (!isNaN(precioMax) && precioMax > 0) {
         filtrados = filtrados.filter(p => p.precio <= precioMax);
-        criteriosAplicados.push(`precio ≤ ${precioMax}`);
+        criteriosAplicados.push(`precio ≤ $${precioMax}`);
     }
 
     state.filtrosActivos = criteriosAplicados.length > 0;
@@ -546,7 +698,13 @@ function bindUI() {
         // Validar datos
         const errores = validarProducto(nombre, precio, stock);
         if (errores.length > 0) {
-            return mostrarMsg('#form-msg', errores[0], 'error');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de validación',
+                text: errores[0],
+                confirmButtonText: 'Aceptar'
+            });
+            return;
         }
 
         // Crear nuevo producto
@@ -562,10 +720,25 @@ function bindUI() {
         if (persistState()) {
             renderProductos();
             form.reset();
-            document.getElementById('input-stock').value = 5; // Resetear a valor por defecto
-            mostrarMsg('#form-msg', `✅ ${nombre} agregado al catálogo`, 'success');
+            document.getElementById('input-stock').value = 5;
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Producto agregado',
+                text: `${nombre} se ha agregado al catálogo correctamente`,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
         } else {
-            mostrarMsg('#form-msg', 'Error al guardar el producto', 'error');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo guardar el producto',
+                confirmButtonText: 'Aceptar'
+            });
         }
     });
 
@@ -577,11 +750,32 @@ function bindUI() {
 
     document.getElementById('btn-save-local').addEventListener('click', function () {
         if (persistState()) {
-            mostrarMsg('#cart-msg', '💾 Datos guardados correctamente', 'success');
+            Swal.fire({
+                icon: 'success',
+                title: 'Guardado',
+                text: 'Datos guardados correctamente',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true
+            });
         } else {
-            mostrarMsg('#cart-msg', 'Error al guardar los datos', 'error');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudieron guardar los datos',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true
+            });
         }
     });
+
+    // Botón resetear datos
+    document.getElementById('btn-reset-data').addEventListener('click', resetearDatos);
 
     // Búsqueda
     document.getElementById('btn-buscar').addEventListener('click', function () {
@@ -647,7 +841,7 @@ function bindUI() {
         }
 
         // Escape: limpiar filtros
-        if (e.code === 'Escape' && !Modal.isOpen()) {
+        if (e.code === 'Escape') {
             limpiarFiltros();
             document.getElementById('buscar-nombre').value = '';
             limpiarMensaje('#buscar-msg');
@@ -656,12 +850,20 @@ function bindUI() {
 }
 
 // Arranque de la aplicación
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
     try {
-        init();
+        await init();
     } catch (error) {
-        // Mostrar error en la interfaz en lugar de alert
-        mostrarMsg('#cart-msg', 'Error al cargar la aplicación. Por favor, recarga la página.', 'error');
+        console.error('Error al iniciar la aplicación:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error crítico',
+            text: 'No se pudo cargar la aplicación. Por favor, recarga la página.',
+            confirmButtonText: 'Recargar',
+            allowOutsideClick: false
+        }).then(() => {
+            window.location.reload();
+        });
     }
 });
 

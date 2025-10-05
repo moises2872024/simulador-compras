@@ -1,0 +1,37 @@
+[
+    {
+        "id": "p1",
+        "nombre": "Auriculares Gamer RGB",
+        "precio": 29.99,
+        "stock": 10,
+        "categoria": "audio"
+    },
+    {
+        "id": "p2",
+        "nombre": "Mouse Óptico 1600 DPI",
+        "precio": 19.50,
+        "stock": 8,
+        "categoria": "input"
+    },
+    {
+        "id": "p3",
+        "nombre": "Teclado Mecánico RGB",
+        "precio": 59.00,
+        "stock": 5,
+        "categoria": "input"
+    },
+    {
+        "id": "p4",
+        "nombre": "Webcam HD 1080p",
+        "precio": 45.00,
+        "stock": 3,
+        "categoria": "video"
+    },
+    {
+        "id": "p5",
+        "nombre": "Monitor LED 24\"",
+        "precio": 199.99,
+        "stock": 2,
+        "categoria": "display"
+    }
+]

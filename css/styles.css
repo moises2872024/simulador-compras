@@ -447,62 +447,6 @@ input[type="number"]:focus {
     background: var(--bg-secondary);
 }
 
-/* Modal personalizado */
-.modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.modal.show {
-    display: flex;
-    opacity: 1;
-}
-
-.modal-content {
-    background: var(--card-bg);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-lg);
-    max-width: 400px;
-    width: 90%;
-    overflow: hidden;
-    transform: scale(0.7);
-    transition: transform 0.3s ease;
-}
-
-.modal.show .modal-content {
-    transform: scale(1);
-}
-
-.modal-header {
-    padding: 20px 24px 0;
-}
-
-.modal-body {
-    padding: 16px 24px;
-    color: var(--text-secondary);
-}
-
-.modal-footer {
-    padding: 16px 24px 24px;
-    display: flex;
-    gap: 12px;
-    justify-content: flex-end;
-}
-
-.modal-footer .btn {
-    min-width: 80px;
-}
-
 .card.highlight {
     border-color: var(--primary) !important;
     box-shadow: 0 0 20px rgba(99, 102, 241, 0.3) !important;
@@ -554,6 +498,41 @@ input:focus {
     background-color: var(--bg-secondary);
 }
 
+/* Personalización de SweetAlert2 */
+.swal2-popup {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif !important;
+    border-radius: var(--radius) !important;
+}
+
+.swal2-title {
+    color: var(--text-primary) !important;
+    font-size: 1.5rem !important;
+}
+
+.swal2-html-container {
+    color: var(--text-secondary) !important;
+}
+
+.swal2-confirm {
+    background-color: var(--primary) !important;
+    border-radius: var(--radius-sm) !important;
+    padding: 10px 24px !important;
+    font-weight: 500 !important;
+}
+
+.swal2-confirm:focus {
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3) !important;
+}
+
+.swal2-cancel {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    border-radius: var(--radius-sm) !important;
+    padding: 10px 24px !important;
+    font-weight: 500 !important;
+    border: 1px solid var(--border) !important;
+}
+
 /* Responsive mejorado */
 @media (max-width: 768px) {
     body {
@@ -584,10 +563,6 @@ input:focus {
     h1 {
         font-size: 2rem;
     }
-    
-    .modal-content {
-        max-width: 320px;
-    }
 }
 
 @media (max-width: 480px) {
@@ -602,13 +577,5 @@ input:focus {
     .quantity-controls {
         justify-content: center;
         margin-top: 12px;
-    }
-    
-    .modal-footer {
-        flex-direction: column;
-    }
-    
-    .modal-footer .btn {
-        width: 100%;
     }
 }
