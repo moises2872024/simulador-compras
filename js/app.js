@@ -38,9 +38,7 @@ async function cargarProductosIniciales() {
         }
         const productos = await response.json();
         return productos;
-    } catch (error) {
-        console.error('Error al cargar productos:', error);
-        
+    } catch (error) { 
         Swal.fire({
             icon: 'error',
             title: 'Error al cargar productos',
@@ -464,13 +462,13 @@ function limpiarMensaje(selector) {
 // Resetear datos a los valores del JSON
 async function resetearDatos() {
     Swal.fire({
-        title: '¿Quieres resetear todos los datos?',
+        title: '¿Quieres borrar todos los datos?',
         html: `
             <p>Esta acción:</p>
             <ul style="text-align: left; padding-left: 20px;">
-                <li>Cargará los productos que se encuentren en el archivo JSON</li>
+                <li>Cargará todos los productos del archivo JSON</li>
                 <li>Vaciará el carrito completamente</li>
-                <li>Eliminará todos los productos que agregaste</li>
+                <li>Eliminará todos los productos agregados desde la pagina</li>
             </ul>
             <p><strong>Esta acción no se puede deshacer.</strong></p>
         `,
@@ -478,14 +476,14 @@ async function resetearDatos() {
         showCancelButton: true,
         confirmButtonColor: '#ef4444',
         cancelButtonColor: '#64748b',
-        confirmButtonText: 'Sí, resetear',
+        confirmButtonText: 'Sí, borrar',
         cancelButtonText: 'Cancelar',
         reverseButtons: true
     }).then(async (result) => {
         if (result.isConfirmed) {
             // Mostrar loading
             Swal.fire({
-                title: 'Reseteando datos...',
+                title: 'Borrando los datos...',
                 allowOutsideClick: false,
                 allowEscapeKey: false,
                 showConfirmButton: false,
@@ -520,8 +518,8 @@ async function resetearDatos() {
 
                 Swal.fire({
                     icon: 'success',
-                    title: 'Datos reseteados',
-                    text: 'Se han reseteado los datos correctamente',
+                    title: 'Datos borrados',
+                    text: 'Se han borrado los datos correctamente',
                     timer: 3000,
                     timerProgressBar: true
                 });
@@ -529,7 +527,7 @@ async function resetearDatos() {
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: 'No se pudieron resetear los datos',
+                    text: 'No se pudieron borrar los datos',
                     confirmButtonText: 'Aceptar'
                 });
             }
@@ -854,7 +852,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     try {
         await init();
     } catch (error) {
-        console.error('Error al iniciar la aplicación:', error);
         Swal.fire({
             icon: 'error',
             title: 'Error crítico',

@@ -180,6 +180,7 @@ h3 {
     transition: all 0.2s ease;
     font-size: 0.875rem;
     min-height: 40px;
+    gap: 8px;
 }
 
 .btn:hover:not(:disabled) {
