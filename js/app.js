@@ -388,7 +388,7 @@ function renderCarrito() {
         const emptyState = document.createElement('div');
         emptyState.className = 'empty-state';
         emptyState.innerHTML = `
-            <div class="empty-state-icon">🛍️</div>
+            <div class="empty-state-icon"><i class="fa-solid fa-bag-shopping"></i></div>
             <p>Tu carrito está vacío</p>
         `;
         carritoListEl.appendChild(emptyState);
@@ -468,7 +468,7 @@ async function resetearDatos() {
             <ul style="text-align: left; padding-left: 20px;">
                 <li>Cargará todos los productos del archivo JSON</li>
                 <li>Vaciará el carrito completamente</li>
-                <li>Eliminará todos los productos agregados desde la pagina</li>
+                <li>Eliminará todos los productos agregados desde la pagina web</li>
             </ul>
             <p><strong>Esta acción no se puede deshacer.</strong></p>
         `,
@@ -826,19 +826,16 @@ function bindUI() {
 
     // Atajos de teclado
     window.addEventListener('keydown', (e) => {
-        // Ctrl+Shift+V: vaciar carrito
         if (e.ctrlKey && e.shiftKey && e.code === 'KeyV') {
             e.preventDefault();
             vaciarCarrito();
         }
 
-        // Ctrl+S: guardar
         if (e.ctrlKey && e.code === 'KeyS') {
             e.preventDefault();
             document.getElementById('btn-save-local').click();
         }
 
-        // Escape: limpiar filtros
         if (e.code === 'Escape') {
             limpiarFiltros();
             document.getElementById('buscar-nombre').value = '';

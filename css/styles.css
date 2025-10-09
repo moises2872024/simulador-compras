@@ -469,7 +469,6 @@ input:focus {
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
-/* Estados de carga */
 .btn.loading {
     position: relative;
     color: transparent;
@@ -490,7 +489,6 @@ input:focus {
     animation: spin 1s linear infinite;
 }
 
-/* Transiciones suaves */
 .cart-item {
     transition: all 0.2s ease;
 }
@@ -499,7 +497,6 @@ input:focus {
     background-color: var(--bg-secondary);
 }
 
-/* Personalización de SweetAlert2 */
 .swal2-popup {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif !important;
     border-radius: var(--radius) !important;
@@ -534,7 +531,6 @@ input:focus {
     border: 1px solid var(--border) !important;
 }
 
-/* Responsive mejorado */
 @media (max-width: 768px) {
     body {
         padding: 12px;
